@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credits & Currency Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .converter-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        input[type="number"] {
+            flex: 1;
+        }
+
+        select {
+            min-width: 120px;
+        }
+
+        .result {
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .exchange-rates {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .rate-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .rate-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input, select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Credits Converter</h1>
+        
+        <div class="converter-section">
+            <div class="section-title">💳 Money → Credits</div>
+            <div class="input-group">
+                <input type="number" id="moneyInput" placeholder="Enter amount" step="0.01" min="0">
+                <select id="currencySelect">
+                    <option value="USD">USD ($)</option>
+                    <option value="BRL">BRL (R$)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                </select>
+            </div>
+            <div class="result" id="creditsResult">Enter an amount to see credits</div>
+        </div>
+
+        <div class="converter-section">
+            <div class="section-title">🎯 Credits → Money</div>
+            <div class="input-group">
+                <input type="number" id="creditsInput" placeholder="Enter credits" step="1" min="0">
+                <select id="currencySelect2">
+                    <option value="USD">USD ($)</option>
+                    <option value="BRL">BRL (R$)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                </select>
+            </div>
+            <div class="result" id="moneyResult">Enter credits to see value</div>
+        </div>
+
+        <div class="exchange-rates">
+            <div class="section-title">📊 Exchange Rates</div>
+            <div class="rate-item">
+                <span>Base (USD):</span>
+                <span class="rate-value">$4.99 = 500 credits</span>
+            </div>
+            <div id="ratesList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Taxa base: $4.99 USD = 500 créditos
+        const BASE_RATE = 500 / 4.99; // créditos por dólar
+
+        // Taxas de câmbio aproximadas (em relação ao USD)
+        const EXCHANGE_RATES = {
+            'USD': 1.00,
+            'BRL': 5.20,    // Real brasileiro
+            'EUR': 0.85,    // Euro
+            'GBP': 0.73,    // Libra esterlina
+            'JPY': 110.00   // Iene japonês
+        };
+
+        // Símbolos das moedas
+        const CURRENCY_SYMBOLS = {
+            'USD': '$',
+            'BRL': 'R$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥'
+        };
+
+        // Elementos DOM
+        const moneyInput = document.getElementById('moneyInput');
+        const creditsInput = document.getElementById('creditsInput');
+        const currencySelect = document.getElementById('currencySelect');
+        const currencySelect2 = document.getElementById('currencySelect2');
+        const creditsResult = document.getElementById('creditsResult');
+        const moneyResult = document.getElementById('moneyResult');
+        const ratesList = document.getElementById('ratesList');
+
+        // Função para converter dinheiro em créditos
+        function convertMoneyToCredits() {
+            const money = parseFloat(moneyInput.value) || 0;
+            const currency = currencySelect.value;
+            
+            if (money <= 0) {
+                creditsResult.textContent = 'Enter an amount to see credits';
+                return;
+            }
+
+            // Converter para USD primeiro, depois para créditos
+            const usdAmount = money / EXCHANGE_RATES[currency];
+            const credits = Math.floor(usdAmount * BASE_RATE);
+            
+            const symbol = CURRENCY_SYMBOLS[currency];
+            creditsResult.innerHTML = `${symbol}${money.toFixed(2)} = <strong>${credits.toLocaleString()} credits</strong>`;
+        }
+
+        // Função para converter créditos em dinheiro
+        function convertCreditsToMoney() {
+            const credits = parseInt(creditsInput.value) || 0;
+            const currency = currencySelect2.value;
+            
+            if (credits <= 0) {
+                moneyResult.textContent = 'Enter credits to see value';
+                return;
+            }
+
+            // Converter créditos para USD primeiro, depois para a moeda escolhida
+            const usdAmount = credits / BASE_RATE;
+            const localAmount = usdAmount * EXCHANGE_RATES[currency];
+            
+            const symbol = CURRENCY_SYMBOLS[currency];
+            moneyResult.innerHTML = `<strong>${credits.toLocaleString()} credits</strong> = ${symbol}${localAmount.toFixed(2)}`;
+        }
+
+        // Função para atualizar as taxas de conversão exibidas
+        function updateRates() {
+            let ratesHTML = '';
+            
+            Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
+                if (currency !== 'USD') {
+                    const symbol = CURRENCY_SYMBOLS[currency];
+                    const localPrice = (4.99 * rate).toFixed(2);
+                    ratesHTML += `
+                        <div class="rate-item">
+                            <span>${currency}:</span>
+                            <span class="rate-value">${symbol}${localPrice} = 500 credits</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            ratesList.innerHTML = ratesHTML;
+        }
+
+        // Event listeners
+        moneyInput.addEventListener('input', convertMoneyToCredits);
+        currencySelect.addEventListener('change', convertMoneyToCredits);
+        creditsInput.addEventListener('input', convertCreditsToMoney);
+        currencySelect2.addEventListener('change', convertCreditsToMoney);
+
+        // Sincronizar os selects de moeda
+        currencySelect.addEventListener('change', () => {
+            currencySelect2.value = currencySelect.value;
+            convertCreditsToMoney();
+        });
+
+        currencySelect2.addEventListener('change', () => {
+            currencySelect.value = currencySelect2.value;
+            convertMoneyToCredits();
+        });
+
+        // Inicializar
+        updateRates();
+        
+        // Adicionar alguns valores de exemplo no carregamento
+        setTimeout(() => {
+            moneyInput.value = '10.00';
+            creditsInput.value = '1000';
+            convertMoneyToCredits();
+            convertCreditsToMoney();
+        }, 500);
+    </script>
+</body>
+</html>
